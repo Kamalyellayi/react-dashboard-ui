@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
-// import { FaUser, FaChartLine } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import Dialog from "../components/Dialog.jsx"; // Reusable dialog
 
 function TransactionsPage() {
@@ -19,6 +19,17 @@ function TransactionsPage() {
   const [search, setSearch] = useState("");
   const [filteredTransactions, setFilteredTransactions] = useState(allTransactions);
   const [dialogVisible, setDialogVisible] = useState(false);
+
+  // 🔔 Custom notification state
+  const [notification, setNotification] = useState(null);
+
+  // Auto-hide notifications after 3s
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const monthlyData = [
     { month: "Jan", amount: 50000 },
@@ -46,8 +57,10 @@ function TransactionsPage() {
   const handleDownload = (format) => {
     const csv = [
       ["ID", "Method", "Amount", "Status", "Date"],
-      ...filteredTransactions.map(tx => [tx.id, tx.method, tx.amount, tx.status, tx.date])
-    ].map(e => e.join(",")).join("\n");
+      ...filteredTransactions.map((tx) => [tx.id, tx.method, tx.amount, tx.status, tx.date]),
+    ]
+      .map((e) => e.join(","))
+      .join("\n");
 
     if (format === "Excel") {
       const blob = new Blob([csv], { type: "text/csv" });
@@ -55,8 +68,10 @@ function TransactionsPage() {
       link.href = URL.createObjectURL(blob);
       link.download = "transactions.csv";
       link.click();
+
+      setNotification({ message: "✅ Transactions exported to Excel", type: "success" });
     } else {
-      alert(`${format} download not implemented. Demo alert only.`);
+      setNotification({ message: `${format} download not implemented.`, type: "warning" });
     }
 
     setDialogVisible(false);
@@ -68,11 +83,11 @@ function TransactionsPage() {
       <div style={{ flex: 1, padding: "20px" }}>
         <Navbar />
 
-        {/* Dialog for Download */}
+        {/* Download Dialog */}
         {dialogVisible && (
           <Dialog
             title="Download Transactions"
-            message="Choose file format to download:"
+            message="Choose a file format to download:"
             options={[
               { label: "Excel", onClick: () => handleDownload("Excel") },
               { label: "PDF", onClick: () => handleDownload("PDF") },
@@ -80,6 +95,32 @@ function TransactionsPage() {
             ]}
             onClose={() => setDialogVisible(false)}
           />
+        )}
+
+        {/* Notification Alert */}
+        {notification && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: "20px",
+              right: "20px",
+              padding: "12px 20px",
+              borderRadius: "8px",
+              color: "#fff",
+              fontSize: "14px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
+              background:
+                notification.type === "success"
+                  ? "#00C49F"
+                  : notification.type === "warning"
+                  ? "#FFC107"
+                  : "#FF4D4D",
+              zIndex: 2000,
+              transition: "all 0.3s ease",
+            }}
+          >
+            {notification.message}
+          </div>
         )}
 
         {/* Summary Cards */}
@@ -90,11 +131,11 @@ function TransactionsPage() {
           </div>
           <div style={cardStyle}>
             <h4>Successful</h4>
-            <p>{allTransactions.filter(tx => tx.status === "Success").length}</p>
+            <p>{allTransactions.filter((tx) => tx.status === "Success").length}</p>
           </div>
           <div style={cardStyle}>
             <h4>Failed</h4>
-            <p>{allTransactions.filter(tx => tx.status === "Failed").length}</p>
+            <p>{allTransactions.filter((tx) => tx.status === "Failed").length}</p>
           </div>
           <div style={cardStyle}>
             <h4>Total Amount</h4>
@@ -103,9 +144,24 @@ function TransactionsPage() {
         </div>
 
         {/* Search & Download */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "15px",
+            alignItems: "center",
+          }}
+        >
           <div style={{ position: "relative", marginRight: "10px", width: "20%" }}>
-            <FaSearch style={{ position: "absolute", top: "50%", left: "10px", transform: "translateY(-50%)", color: "#888" }} />
+            <FaSearch
+              style={{
+                position: "absolute",
+                top: "40%",
+                left: "10px",
+                transform: "translateY(-50%)",
+                color: "#888",
+              }}
+            />
             <input
               type="text"
               placeholder="Search transactions..."
@@ -116,8 +172,8 @@ function TransactionsPage() {
           </div>
           <button
             style={stylishGreenBtn}
-            onMouseEnter={e => Object.assign(e.target.style, stylishGreenBtnHover)}
-            onMouseLeave={e => Object.assign(e.target.style, stylishGreenBtn)}
+            onMouseEnter={(e) => Object.assign(e.target.style, stylishGreenBtnHover)}
+            onMouseLeave={(e) => Object.assign(e.target.style, stylishGreenBtn)}
             onClick={() => setDialogVisible(true)}
           >
             Download
@@ -138,12 +194,14 @@ function TransactionsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map(tx => (
+              {filteredTransactions.map((tx) => (
                 <tr key={tx.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                   <td>{tx.id}</td>
                   <td>{tx.method}</td>
                   <td>₹{tx.amount}</td>
-                  <td style={{ color: tx.status === "Success" ? "#00C49F" : "#FF4D4D" }}>{tx.status}</td>
+                  <td style={{ color: tx.status === "Success" ? "#00C49F" : "#FF4D4D" }}>
+                    {tx.status}
+                  </td>
                   <td>{tx.date}</td>
                 </tr>
               ))}
@@ -158,12 +216,12 @@ function TransactionsPage() {
             <BarChart data={monthlyData} barCategoryGap="30%">
               <XAxis dataKey="month" stroke="#ccc" />
               <YAxis stroke="#ccc" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: "#222", borderRadius: "6px", border: "none", color: "#fff" }}
                 labelStyle={{ color: "#ccc" }}
                 itemStyle={{ color: "#fff" }}
               />
-              <Bar dataKey="amount" fill="#00C49F" radius={[5,5,0,0]} />
+              <Bar dataKey="amount" fill="#00C49F" radius={[5, 5, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -190,7 +248,6 @@ const inputStyle = {
   color: "#fff",
 };
 
-// Stylish green button
 const stylishGreenBtn = {
   padding: "10px 20px",
   borderRadius: "12px",
