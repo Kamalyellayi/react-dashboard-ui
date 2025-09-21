@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Sidebar from "../components/Sidebar.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
-import { FaSearch } from "react-icons/fa";
+import { FaHome, FaUser, FaChartBar } from "react-icons/fa";
 import Dialog from "../components/Dialog.jsx"; // Reusable dialog
 
 function TransactionsPage() {
